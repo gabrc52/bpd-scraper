@@ -7,8 +7,25 @@ from opencage.geocoder import OpenCageGeocode
 load_dotenv()
 KEY = os.getenv('OPENCAGE')
 geocoder = OpenCageGeocode(KEY)
+import pickle
+
+def load_cached_address(address):
+    addresses = pickle.load(open('addresses.pickle', 'rb'))
+    if address in addresses:
+        return addresses[address]
+
+def save_cached_address(address, geocoded):
+    addresses = pickle.load(open('addresses.pickle', 'rb'))
+    addresses[address] = geocoded
+    pickle.dump(addresses, open('addresses.pickle', 'wb'))
 
 def geocode(address):
+    # First, try to return cached address
+    cached_address = load_cached_address(address)
+    if cached_address:
+        print(f"No need to geocode {address}, we did it before :)")
+        return cached_address
+    
     if len(address) == 0: 
         return None, None
     address = address.strip()
@@ -18,6 +35,9 @@ def geocode(address):
         print(f"Geocoding {address}.")
         lat = result[0]['geometry']['lat']
         lng = result[0]['geometry']['lng']
+        
+        # Save into cache
+        save_cached_address(address, (lat, lng))
     else:
         lat = None
         lng = None
@@ -72,4 +92,4 @@ def scrape_pdf(path_list):
 # TODO: paste the part that gets ALL the pdfs
 file_list = ['may2.pdf']
 df = scrape_pdf(file_list)
-df.to_csv('./outputs/police_journal_no_geocoding.csv', index_label='id')
+df.to_csv('./outputs/police_journal.csv', index_label='id')
