@@ -6,9 +6,9 @@ from dotenv import load_dotenv, find_dotenv
 from opencage.geocoder import OpenCageGeocode
 load_dotenv()
 KEY = os.getenv('OPENCAGE')
-geocoder = OpenCageGeocode(key)
+geocoder = OpenCageGeocode(KEY)
 
-def gc(address):
+def geocode(address):
     if len(address) == 0: 
         return None, None
     address = address.strip()
@@ -43,7 +43,7 @@ def get_category(pdf, cell_text, h=20, w=220):
 
 def scrape_pdf(path_list):
     officers = []
-    occurence_times = []
+    occurrence_times = []
     report_times = []
     complaints = []
     locations = []
@@ -61,12 +61,15 @@ def scrape_pdf(path_list):
         locations.extend(get_category(pdf, cell_text="Location of", h=20, w=520))
         natures.extend(get_category(pdf, cell_text="Nature of", h=20, w=520))
     for loc in locations:
-        lat.append(gc(loc)[0])
-        lng.append(gc(loc)[1])
+        geocoded = geocode(loc)
+        lat.append(geocoded[0])
+        lng.append(geocoded[1])
     df = pd.DataFrame(list(zip(officers, occurrence_times, report_times, complaints, locations, natures, lat, lng)), 
                        columns =['officer', 'occ_time', 'rep_time', 'complaint_no', 'location', 'nature', 'lat', 'lng'])
     return(df)
 
-file_list = glob(os.path.join('./data/pdfs/','*.pdf'))
+
+# TODO: paste the part that gets ALL the pdfs
+file_list = ['may2.pdf']
 df = scrape_pdf(file_list)
-df.to_csv('./outputs/police_journal.csv', index_label='id')
+df.to_csv('./outputs/police_journal_no_geocoding.csv', index_label='id')

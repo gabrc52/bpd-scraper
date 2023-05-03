@@ -1,10 +1,10 @@
 import pandas as pd
 import geopandas as gpd
-import d6tjoin.top1
+import d6tjoin.top1 #i.e. "Easily join different datasets without writing custom code"
 from os import path
 
 # Remove commas and reverse last-first.
-bpd = pd.read_csv('./data/employee_earnings.csv')
+bpd = pd.read_csv('./data/earnings.csv')
 bpd.columns = map(str.lower, bpd.columns)
 bpd = bpd[bpd.department_name.eq('Boston Police Department')]
 bpd.loc[:,'name'] = bpd.name.str.split(pat = ',').apply(lambda x: ' '.join(x[::-1]))
