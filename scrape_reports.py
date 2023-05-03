@@ -8,6 +8,7 @@ load_dotenv()
 KEY = os.getenv('OPENCAGE')
 geocoder = OpenCageGeocode(KEY)
 import pickle
+from list_files import ordered_files
 
 def load_cached_address(address):
     addresses = pickle.load(open('addresses.pickle', 'rb'))
@@ -70,6 +71,10 @@ def scrape_pdf(path_list):
     natures = []
     lat = []
     lng = []
+    # TODO: I don't like how it waits to parse all the PDFs and only then it tries geocoding
+    # If there is any failure, maybe we want to do it gradually like scrape_rss.py so we can
+    # resume after failures, power outages, etc
+    # Or maybe do the scraping and geocoding separately. They don't need to be together.
     for path in path_list:
         print(f"Scraping {path}...")
         pdf = pdfquery.PDFQuery(path)
@@ -86,10 +91,11 @@ def scrape_pdf(path_list):
         lng.append(geocoded[1])
     df = pd.DataFrame(list(zip(officers, occurrence_times, report_times, complaints, locations, natures, lat, lng)), 
                        columns =['officer', 'occ_time', 'rep_time', 'complaint_no', 'location', 'nature', 'lat', 'lng'])
-    return(df)
+    return df
 
 
-# TODO: paste the part that gets ALL the pdfs
-file_list = ['may2.pdf']
+
+# file_list = glob(os.path.join('./pdfs/','*.pdf'))
+file_list = ordered_files[:3]
 df = scrape_pdf(file_list)
 df.to_csv('./outputs/police_journal.csv', index_label='id')
