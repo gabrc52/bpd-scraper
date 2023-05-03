@@ -1,0 +1,8 @@
+# api key
+.env
+
+# caches
+__pycache__
+
+# downloaded pdf files
+*.pdf
