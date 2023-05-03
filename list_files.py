@@ -21,7 +21,8 @@ with open('files.tsv', 'r') as f:
 
             for url in urls:
                 if url in all_urls:
-                    print('Duplicate URL found', url)
+                    pass
+                    # print('Duplicate URL found', url)
                 else:
                     ordered_files.append(os.path.join('./pdfs/', get_filename(url)))
                     all_urls.add(url)
