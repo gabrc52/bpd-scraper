@@ -145,8 +145,8 @@ if __name__ == '__main__':
         if os.path.exists(get_csv_file(file)):
             print('Skipping', file, '(already done)')
             continue
-        scrape_pdf([file], skip_geocoding=True)
-        # executor.submit(scrape_pdf, [file], skip_geocoding=True)
+        # scrape_pdf([file], skip_geocoding=True)
+        executor.submit(scrape_pdf, [file], skip_geocoding=True)
 
     # df = scrape_pdf(file_list)
     # df.to_csv('./outputs/police_journal.csv', index_label='id')
