@@ -10,6 +10,7 @@ geocoder = OpenCageGeocode(KEY)
 import pickle
 from list_files import ordered_files
 import concurrent.futures
+from pdfquery.cache import FileCache
 
 def load_cached_address(address):
     addresses = pickle.load(open('addresses.pickle', 'rb'))
@@ -93,13 +94,22 @@ def scrape_pdf(path_list, skip_geocoding=False):
     # Or maybe do the scraping and geocoding separately. They don't need to be together.
     for path in path_list:
         print(f"Scraping {path}...")
-        pdf = pdfquery.PDFQuery(path)
+        # "The initial call to pdf.load() runs very slowly, because the underlying pdfminer 
+        # library has to compare every element on the page to every other element."
+        pdf = pdfquery.PDFQuery(path)# , parse_tree_cacher=FileCache("./cache/"))
+        # Unfortunately, caching is not very straightforward with concurrency
+
         pdf.load()
         officers.extend(get_category(pdf, cell_text="Officer", h=20, w=220))
         occurrence_times.extend(get_category(pdf, cell_text="Occurrence Date", h=20, w=136))
         report_times.extend(get_category(pdf, cell_text="Report Date", h=20, w=104))
         complaints.extend(get_category(pdf, cell_text="Complaint #", h=20, w=84))
-        locations.extend(get_category(pdf, cell_text="Location of", h=20, w=520))
+        # HACKY SOLUTION to get full addresses is to increase the height and then remove the "nature of incident"
+        # Since I don't understand how the PDF extraction works, and even the docs get bounding boxes
+        # Once I have more time (i.e. UROP), I can read the pdfquery docs with the time they deserve
+        current_locations = get_category(pdf, cell_text="Location of", h=40, w=520)
+        current_locations = [location.replace("Nature Of Incident", "").strip() for location in current_locations]
+        locations.extend(current_locations)
         natures.extend(get_category(pdf, cell_text="Nature of", h=20, w=520))
 
     columns = [officers, occurrence_times, report_times, complaints, locations, natures]
@@ -117,22 +127,26 @@ def scrape_pdf(path_list, skip_geocoding=False):
         filename = get_csv_file(path_list[0])
         print('Ended scraping', filename)
         df.to_csv(filename, index_label='id')
+    else:
+        print(path_list)
     return df
 
 
-executor = concurrent.futures.ProcessPoolExecutor()
+if __name__ == '__main__':
+    executor = concurrent.futures.ProcessPoolExecutor()
 
-# file_list = glob(os.path.join('./pdfs/','*.pdf'))
-file_list = ordered_files
-for file in file_list:
-    # If we want to try to do the PDF scraping concurrently, then we need to
-    # do the geocoding separately, because we might have bad interleavings when trying
-    # to remember what we have geocoded so far
+    # file_list = glob(os.path.join('./pdfs/','*.pdf'))
+    file_list = ordered_files
+    for file in file_list:
+        # If we want to try to do the PDF scraping concurrently, then we need to
+        # do the geocoding separately, because we might have bad interleavings when trying
+        # to remember what we have geocoded so far
 
-    if os.path.exists(get_csv_file(file)):
-        print('Skipping', file, '(already done)')
-        continue
-    executor.submit(scrape_pdf, [file], skip_geocoding=True)
+        if os.path.exists(get_csv_file(file)):
+            print('Skipping', file, '(already done)')
+            continue
+        scrape_pdf([file], skip_geocoding=True)
+        # executor.submit(scrape_pdf, [file], skip_geocoding=True)
 
-# df = scrape_pdf(file_list)
-# df.to_csv('./outputs/police_journal.csv', index_label='id')
+    # df = scrape_pdf(file_list)
+    # df.to_csv('./outputs/police_journal.csv', index_label='id')
