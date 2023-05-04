@@ -15,8 +15,9 @@ for filename in csvs:
             officer_addresses.add(line[5])
 
 intersection_addresses = {address for address in officer_addresses if '&' in address}
+nonintersection_addresses = officer_addresses - intersection_addresses
 
 print('Total addresses:', len(total_addresses))
-print('Total addresses with officer data:', len(officer_addresses))
+print('Total addresses with officer data (excl. intersections):', len(nonintersection_addresses))
 print('Total addresses with officer data and intersections:', len(intersection_addresses))
 
