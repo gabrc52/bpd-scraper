@@ -1,3 +1,19 @@
+"""
+Geocode the CSV in output.csv (or change INPUT below) into outputs/police_journal.csv (or change OUTPUT below)
+
+You can run this, without fear of having to cancel and re-run.
+
+You can Ctrl+C, and if you re-run, the cache will be used :)
+Same for not having to geocode the same address twice
+
+It will use the OpenCage geocoder whenever possible (no street intersections), otherwise it will use the Google geocoder.
+
+To prefer Google, set FORCE_GOOGLE to True
+"""
+
+# TODO: might be good to add something to ensure Google doesn't charge us
+# i.e. completely refuse any Google requests if the limit is reached
+
 import csv
 import opencage
 import pickle
@@ -14,6 +30,7 @@ gmaps = googlemaps.Client(key=GOOGLE_KEY)
 
 INPUT = 'output.csv'
 OUTPUT = 'outputs/police_journal.csv'
+FORCE_GOOGLE = False # Change to force the use of Google geocoder instead of opencage
 # OUTPUT = 'debug.csv'
 
 # if cache not found, create it
@@ -32,27 +49,29 @@ def save_cached_address(address, geocoded, service):
     addresses[address] = geocoded
     pickle.dump(addresses, open(f'{service}.pickle', 'wb'))
 
-def geocode(addr, force_google=False):
+def geocode(addr, force_google=FORCE_GOOGLE):
     """
     Geocodes an address, returning a tuple (coords, cleaned address, condience)
     """
-    if '&' in addr or force_google:
+    cached_opencage = load_cached_address(addr, 'opencage')
+    cached_google = load_cached_address(addr, 'google')
+    # Always prefer cached Google result (change if you want to alwasy prefer OpenCage)
+    if cached_google:
+        print('g', end='', flush=True)
+        return cached_google
+    if cached_opencage:
+        print('o', end='', flush=True)
+        return cached_opencage
+    # Okay, not in cache
+    if '&' in addr or force_google and not cached_opencage:
         # OpenCage cannot deal with addresses with &
-        cached = load_cached_address(addr, 'google')
-        if cached:
-            print(f'{addr} was cached by google', file=sys.stderr)
-            return cached
-        print(f'Google is geocoding {addr}')
+        print('G', end='', flush=True)
         results = gmaps.geocode(addr)
         result = results[0]
         fields = (result['geometry']['location']['lat'], result['geometry']['location']['lng']), result['formatted_address'], 'google'
         save_cached_address(addr, fields, 'google')
     else:
-        cached = load_cached_address(addr, 'opencage')
-        if cached:
-            print(f'{addr} was cached by opencage', file=sys.stderr)
-            return cached
-        print(f'OpenCage is geocoding {addr}', file=sys.stderr)
+        print('O', end='', flush=True)
         results = geocoder.geocode(addr, countrycode='us', no_annotations=1, no_record=1)
         result = results[0]
         fields = (result['geometry']['lat'], result['geometry']['lng']), result['formatted'], result['confidence']
