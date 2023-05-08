@@ -4,8 +4,6 @@ Scraping Boston Police Journal pdfs, provided (roughly) daily on https://bpdnews
 
 Running:
 
-*Note: these instructions are outdated. Because of the large amount of data, there's more intermediate converters/cleaners instead of one monolithic scraper, so these instructions no longer hold. TODO: add the list of all intermediate scripts to run*
-
 1. Save your OpenCage API key in a file called `.env` with contents `OPENCAGE=yourapikeygoeshere`
 
 2. Run `scrape_rss.py` to download the PDF files
