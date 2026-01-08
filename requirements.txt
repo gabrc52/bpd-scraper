@@ -1,6 +1,6 @@
 affinegap==1.11
 attrs==19.3.0
-backcall==0.1.0
+backcall==0.2.0
 backoff==1.10.0
 bleach==6.3.0
 certifi==2024.7.4
