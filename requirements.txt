@@ -16,7 +16,7 @@ d6tcollect==1.0.5
 d6tjoin @ git+https://github.com/d6t/d6tjoin.git@e88039666636da07ccf9823f9769c40a06a1beaf
 d6tstack==0.2.0
 decorator==4.4.2
-defusedxml==0.6.0
+defusedxml==0.7.1
 descartes==1.1.0
 entrypoints==0.3
 Fiona==1.10.0rc1
