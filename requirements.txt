@@ -55,7 +55,7 @@ pdfminer.six==20200517
 pdfquery==0.4.3
 pexpect==4.8.0
 pickleshare==0.7.5
-prometheus-client==0.8.0
+prometheus-client==0.24.1
 prompt-toolkit==3.0.5
 ptyprocess==0.6.0
 pycparser==2.20
